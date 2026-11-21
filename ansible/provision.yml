@@ -1,0 +1,112 @@
+---
+# CentOS Stream 8 - EOL: репозитории перенесены на vault.centos.org,
+# а ansible-core 2.17+ не поддерживает python 3.6 на целевых хостах,
+# поэтому сначала через raw чиним репозитории и ставим python3.9.
+- name: Bootstrap CentOS Stream 8
+  hosts: centos
+  become: yes
+  gather_facts: no
+  tasks:
+  - name: switch repos to vault.centos.org
+    raw: sed -i -e 's|^mirrorlist=|#mirrorlist=|g' -e 's|^#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*.repo
+    changed_when: false
+
+  - name: install python3.9
+    raw: test -x /usr/bin/python3.9 || dnf install -y python39
+    register: py39
+    changed_when: "'Complete!' in py39.stdout"
+
+- name: Base set up
+  #Настройка производится на всех хостах
+  hosts: all
+  become: yes
+  tasks:
+  #Установка приложений на RedHat-based системах (через dnf: модуль dnf в ansible 2.20 не работает с python 3.6 bindings)
+  - name: install software on CentOS
+    command: dnf install -y vim traceroute tcpdump net-tools
+    register: dnf_out
+    changed_when: "'Nothing to do' not in dnf_out.stdout"
+    when: (ansible_os_family == "RedHat")
+
+  #Установка приложений на Debian-based системах
+  - name: install software on Debian-based
+    apt:
+      name:
+        - vim
+        - traceroute
+        - tcpdump
+        - net-tools
+      state: present
+      update_cache: true
+    when: (ansible_os_family == "Debian")
+
+- name: set up vlan1
+  #Настройка будет производиться на хостах testClient1 и testServer1
+  hosts: testClient1,testServer1
+  become: yes
+  tasks:
+  #Добавление темплейта в файл /etc/sysconfig/network-scripts/ifcfg-vlan1
+  - name: set up vlan1
+    template:
+      src: ifcfg-vlan1.j2
+      dest: /etc/sysconfig/network-scripts/ifcfg-vlan1
+      owner: root
+      group: root
+      mode: "0644"
+
+  #Перезапуск службы NetworkManager
+  - name: restart network for vlan1
+    service:
+      name: NetworkManager
+      state: restarted
+
+- name: set up vlan2
+  hosts: testClient2,testServer2
+  become: yes
+  tasks:
+  #Запрещаем cloud-init перезаписывать сетевые настройки
+  - name: disable cloud-init network config
+    copy:
+      dest: /etc/cloud/cloud.cfg.d/99-disable-network-config.cfg
+      content: "network: {config: disabled}\n"
+      mode: "0644"
+
+  - name: set up vlan2
+    template:
+      src: 50-cloud-init.yaml.j2
+      dest: /etc/netplan/50-cloud-init.yaml
+      owner: root
+      group: root
+      mode: "0600"
+
+  - name: apply set up vlan2
+    shell: netplan apply
+    become: true
+
+- name: set up bond0
+  hosts: inetRouter,centralRouter
+  become: yes
+  tasks:
+  - name: set up ifcfg-bond0
+    template:
+      src: ifcfg-bond0.j2
+      dest: /etc/sysconfig/network-scripts/ifcfg-bond0
+      owner: root
+      group: root
+      mode: "0644"
+
+  - name: set up eth1,eth2
+    copy:
+      src: "{{ item }}"
+      dest: /etc/sysconfig/network-scripts/
+      owner: root
+      group: root
+      mode: "0644"
+    with_items:
+      - templates/ifcfg-eth1
+      - templates/ifcfg-eth2
+
+  #Перезагрузка хостов
+  - name: restart hosts for bond0
+    reboot:
+      reboot_timeout: 3600

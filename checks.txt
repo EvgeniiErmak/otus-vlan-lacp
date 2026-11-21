@@ -1,0 +1,235 @@
+================ VLAN 1: testClient1 <-> testServer1 ================
+
+########## [testClient1] ip -br a; ip -d link show eth1.1 | grep -E 'vlan|link/ether'
+lo               UNKNOWN        127.0.0.1/8 ::1/128 
+eth0             UP             10.0.2.15/24 fd17:625c:f037:2:5054:ff:fe00:8b99/64 fe80::5054:ff:fe00:8b99/64 
+eth1             UP             fe80::7574:b840:fedb:f4cf/64 
+eth2             UP             192.168.56.21/24 fe80::a00:27ff:fe88:d549/64 
+eth1.1@eth1      UP             10.10.10.254/24 fe80::a00:27ff:fe74:8782/64 
+    link/ether 08:00:27:74:87:82 brd ff:ff:ff:ff:ff:ff promiscuity 0 minmtu 0 maxmtu 65535 
+    vlan protocol 802.1Q id 1 <REORDER_HDR> addrgenmode eui64 numtxqueues 1 numrxqueues 1 gso_max_size 65536 gso_max_segs 65535 
+
+########## [testServer1] ip -br a; ip -d link show eth1.1 | grep -E 'vlan|link/ether'
+lo               UNKNOWN        127.0.0.1/8 ::1/128 
+eth0             UP             10.0.2.15/24 fd17:625c:f037:2:5054:ff:fe00:8b99/64 fe80::5054:ff:fe00:8b99/64 
+eth1             UP             fe80::63e7:6405:896f:530c/64 
+eth2             UP             192.168.56.22/24 fe80::a00:27ff:fe3d:d9ac/64 
+eth1.1@eth1      UP             10.10.10.1/24 fe80::a00:27ff:feb6:353c/64 
+    link/ether 08:00:27:b6:35:3c brd ff:ff:ff:ff:ff:ff promiscuity 0 minmtu 0 maxmtu 65535 
+    vlan protocol 802.1Q id 1 <REORDER_HDR> addrgenmode eui64 numtxqueues 1 numrxqueues 1 gso_max_size 65536 gso_max_segs 65535 
+
+########## [testClient1] ping -c 4 10.10.10.1; ip neigh show 10.10.10.1
+PING 10.10.10.1 (10.10.10.1) 56(84) bytes of data.
+64 bytes from 10.10.10.1: icmp_seq=1 ttl=64 time=0.428 ms
+64 bytes from 10.10.10.1: icmp_seq=2 ttl=64 time=0.327 ms
+64 bytes from 10.10.10.1: icmp_seq=3 ttl=64 time=0.318 ms
+64 bytes from 10.10.10.1: icmp_seq=4 ttl=64 time=0.319 ms
+
+--- 10.10.10.1 ping statistics ---
+4 packets transmitted, 4 received, 0% packet loss, time 3101ms
+rtt min/avg/max/mdev = 0.318/0.348/0.428/0.046 ms
+10.10.10.1 dev eth1.1 lladdr 08:00:27:b6:35:3c REACHABLE 
+
+================ VLAN 2: testClient2 <-> testServer2 ================
+
+########## [testClient2] ip -br a; ip -d link show vlan2 | grep -E 'vlan|link/ether'
+lo               UNKNOWN        127.0.0.1/8 ::1/128 
+enp0s3           UP             10.0.2.15/24 metric 100 fd17:625c:f037:2:8b:ccff:feef:930c/64 fe80::8b:ccff:feef:930c/64 
+enp0s8           UP             fe80::a00:27ff:fe10:b6f8/64 
+enp0s19          UP             192.168.56.31/24 fe80::a00:27ff:fe02:6f02/64 
+vlan2@enp0s8     UP             10.10.10.254/24 fe80::a00:27ff:fe10:b6f8/64 
+5: vlan2@enp0s8: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP mode DEFAULT group default qlen 1000
+    link/ether 08:00:27:10:b6:f8 brd ff:ff:ff:ff:ff:ff promiscuity 0 minmtu 0 maxmtu 65535 
+    vlan protocol 802.1Q id 2 <REORDER_HDR> addrgenmode eui64 numtxqueues 1 numrxqueues 1 gso_max_size 65536 gso_max_segs 65535 
+
+########## [testServer2] ip -br a; ip -d link show vlan2 | grep -E 'vlan|link/ether'
+lo               UNKNOWN        127.0.0.1/8 ::1/128 
+enp0s3           UP             10.0.2.15/24 metric 100 fd17:625c:f037:2:8b:ccff:feef:930c/64 fe80::8b:ccff:feef:930c/64 
+enp0s8           UP             fe80::a00:27ff:fe67:963f/64 
+enp0s19          UP             192.168.56.32/24 fe80::a00:27ff:fe74:44b5/64 
+vlan2@enp0s8     UP             10.10.10.1/24 fe80::a00:27ff:fe67:963f/64 
+5: vlan2@enp0s8: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP mode DEFAULT group default qlen 1000
+    link/ether 08:00:27:67:96:3f brd ff:ff:ff:ff:ff:ff promiscuity 0 minmtu 0 maxmtu 65535 
+    vlan protocol 802.1Q id 2 <REORDER_HDR> addrgenmode eui64 numtxqueues 1 numrxqueues 1 gso_max_size 65536 gso_max_segs 65535 
+
+########## [testClient2] ping -c 4 10.10.10.1; ip neigh show 10.10.10.1
+PING 10.10.10.1 (10.10.10.1) 56(84) bytes of data.
+64 bytes from 10.10.10.1: icmp_seq=1 ttl=64 time=0.420 ms
+64 bytes from 10.10.10.1: icmp_seq=2 ttl=64 time=0.325 ms
+64 bytes from 10.10.10.1: icmp_seq=3 ttl=64 time=0.357 ms
+64 bytes from 10.10.10.1: icmp_seq=4 ttl=64 time=0.373 ms
+
+--- 10.10.10.1 ping statistics ---
+4 packets transmitted, 4 received, 0% packet loss, time 3055ms
+rtt min/avg/max/mdev = 0.325/0.368/0.420/0.034 ms
+10.10.10.1 dev vlan2 lladdr 08:00:27:67:96:3f REACHABLE
+
+================ BOND: состояние ================
+
+########## [inetRouter] ip -br a; cat /proc/net/bonding/bond0
+lo               UNKNOWN        127.0.0.1/8 ::1/128 
+eth0             UP             10.0.2.15/24 fd17:625c:f037:2:5054:ff:fe00:8b99/64 fe80::5054:ff:fe00:8b99/64 
+bond0            UP             192.168.255.1/30 fe80::a00:27ff:fe00:baec/64 
+eth1             UP             
+eth2             UP             
+eth3             UP             192.168.56.10/24 fe80::a00:27ff:fe1a:1838/64 
+Ethernet Channel Bonding Driver: v3.7.1 (April 27, 2011)
+
+Bonding Mode: fault-tolerance (active-backup) (fail_over_mac active)
+Primary Slave: None
+Currently Active Slave: eth2
+MII Status: up
+MII Polling Interval (ms): 100
+Up Delay (ms): 0
+Down Delay (ms): 0
+Peer Notification Delay (ms): 0
+
+Slave Interface: eth2
+MII Status: up
+Speed: 1000 Mbps
+Duplex: full
+Link Failure Count: 0
+Permanent HW addr: 08:00:27:00:ba:ec
+Slave queue ID: 0
+
+Slave Interface: eth1
+MII Status: up
+Speed: 1000 Mbps
+Duplex: full
+Link Failure Count: 0
+Permanent HW addr: 08:00:27:38:40:6d
+Slave queue ID: 0
+
+########## [centralRouter] ip -br a; cat /proc/net/bonding/bond0
+lo               UNKNOWN        127.0.0.1/8 ::1/128 
+bond0            UP             192.168.255.2/30 fe80::a00:27ff:fe55:4aa2/64 
+eth0             UP             10.0.2.15/24 fd17:625c:f037:2:5054:ff:fe00:8b99/64 fe80::5054:ff:fe00:8b99/64 
+eth1             UP             
+eth2             UP             
+eth3             UP             192.168.255.9/30 fe80::a00:27ff:fe7e:1b56/64 
+eth4             UP             192.168.56.11/24 fe80::a00:27ff:feef:e54c/64 
+Ethernet Channel Bonding Driver: v3.7.1 (April 27, 2011)
+
+Bonding Mode: fault-tolerance (active-backup) (fail_over_mac active)
+Primary Slave: None
+Currently Active Slave: eth1
+MII Status: up
+MII Polling Interval (ms): 100
+Up Delay (ms): 0
+Down Delay (ms): 0
+Peer Notification Delay (ms): 0
+
+Slave Interface: eth1
+MII Status: up
+Speed: 1000 Mbps
+Duplex: full
+Link Failure Count: 0
+Permanent HW addr: 08:00:27:55:4a:a2
+Slave queue ID: 0
+
+Slave Interface: eth2
+MII Status: up
+Speed: 1000 Mbps
+Duplex: full
+Link Failure Count: 0
+Permanent HW addr: 08:00:27:51:cd:d6
+Slave queue ID: 0
+
+================ BOND: отказ eth1 на centralRouter во время ping ================
+
+########## [inetRouter] ping -c 20 -i 0.5 192.168.255.2
+PING 192.168.255.2 (192.168.255.2) 56(84) bytes of data.
+64 bytes from 192.168.255.2: icmp_seq=1 ttl=64 time=0.488 ms
+64 bytes from 192.168.255.2: icmp_seq=2 ttl=64 time=0.265 ms
+64 bytes from 192.168.255.2: icmp_seq=3 ttl=64 time=0.298 ms
+
+########## [centralRouter] sudo ip link set down eth1; sleep 1; grep -E 'Currently Active Slave|Slave Interface|MII Status' /proc/net/bonding/bond0
+64 bytes from 192.168.255.2: icmp_seq=4 ttl=64 time=0.339 ms
+64 bytes from 192.168.255.2: icmp_seq=5 ttl=64 time=0.349 ms
+64 bytes from 192.168.255.2: icmp_seq=6 ttl=64 time=0.326 ms
+64 bytes from 192.168.255.2: icmp_seq=8 ttl=64 time=0.681 ms
+64 bytes from 192.168.255.2: icmp_seq=9 ttl=64 time=0.433 ms
+Currently Active Slave: eth2
+MII Status: up
+Slave Interface: eth1
+MII Status: down
+Slave Interface: eth2
+MII Status: up
+64 bytes from 192.168.255.2: icmp_seq=10 ttl=64 time=0.513 ms
+64 bytes from 192.168.255.2: icmp_seq=11 ttl=64 time=0.295 ms
+64 bytes from 192.168.255.2: icmp_seq=12 ttl=64 time=0.431 ms
+64 bytes from 192.168.255.2: icmp_seq=13 ttl=64 time=0.363 ms
+64 bytes from 192.168.255.2: icmp_seq=14 ttl=64 time=0.302 ms
+64 bytes from 192.168.255.2: icmp_seq=15 ttl=64 time=0.290 ms
+64 bytes from 192.168.255.2: icmp_seq=16 ttl=64 time=0.310 ms
+64 bytes from 192.168.255.2: icmp_seq=17 ttl=64 time=0.357 ms
+64 bytes from 192.168.255.2: icmp_seq=18 ttl=64 time=0.274 ms
+64 bytes from 192.168.255.2: icmp_seq=19 ttl=64 time=0.254 ms
+64 bytes from 192.168.255.2: icmp_seq=20 ttl=64 time=0.317 ms
+
+--- 192.168.255.2 ping statistics ---
+20 packets transmitted, 19 received, 5% packet loss, time 9605ms
+rtt min/avg/max/mdev = 0.254/0.362/0.681/0.104 ms
+
+================ BOND: отказ eth1 на inetRouter во время ping ================
+
+########## [centralRouter] ping -c 20 -i 0.5 192.168.255.1
+PING 192.168.255.1 (192.168.255.1) 56(84) bytes of data.
+64 bytes from 192.168.255.1: icmp_seq=1 ttl=64 time=0.287 ms
+64 bytes from 192.168.255.1: icmp_seq=2 ttl=64 time=0.270 ms
+64 bytes from 192.168.255.1: icmp_seq=3 ttl=64 time=0.309 ms
+
+########## [inetRouter] sudo ip link set down eth1; sleep 1; grep -E 'Currently Active Slave|Slave Interface|MII Status' /proc/net/bonding/bond0
+64 bytes from 192.168.255.1: icmp_seq=4 ttl=64 time=0.304 ms
+64 bytes from 192.168.255.1: icmp_seq=5 ttl=64 time=0.339 ms
+64 bytes from 192.168.255.1: icmp_seq=6 ttl=64 time=0.256 ms
+64 bytes from 192.168.255.1: icmp_seq=7 ttl=64 time=0.313 ms
+64 bytes from 192.168.255.1: icmp_seq=8 ttl=64 time=0.282 ms
+64 bytes from 192.168.255.1: icmp_seq=9 ttl=64 time=0.352 ms
+Currently Active Slave: eth2
+MII Status: up
+Slave Interface: eth2
+MII Status: up
+Slave Interface: eth1
+MII Status: down
+64 bytes from 192.168.255.1: icmp_seq=10 ttl=64 time=0.375 ms
+64 bytes from 192.168.255.1: icmp_seq=11 ttl=64 time=0.326 ms
+64 bytes from 192.168.255.1: icmp_seq=12 ttl=64 time=0.272 ms
+64 bytes from 192.168.255.1: icmp_seq=13 ttl=64 time=0.368 ms
+64 bytes from 192.168.255.1: icmp_seq=14 ttl=64 time=0.325 ms
+64 bytes from 192.168.255.1: icmp_seq=15 ttl=64 time=0.373 ms
+64 bytes from 192.168.255.1: icmp_seq=16 ttl=64 time=0.321 ms
+64 bytes from 192.168.255.1: icmp_seq=17 ttl=64 time=0.364 ms
+64 bytes from 192.168.255.1: icmp_seq=18 ttl=64 time=0.337 ms
+64 bytes from 192.168.255.1: icmp_seq=19 ttl=64 time=0.376 ms
+64 bytes from 192.168.255.1: icmp_seq=20 ttl=64 time=0.355 ms
+
+--- 192.168.255.1 ping statistics ---
+20 packets transmitted, 20 received, 0% packet loss, time 9637ms
+rtt min/avg/max/mdev = 0.256/0.325/0.376/0.038 ms
+
+================ BOND: восстановление eth1 ================
+
+########## [centralRouter] sudo ip link set up eth1; sleep 2; grep -E 'Currently Active Slave|Slave Interface|MII Status' /proc/net/bonding/bond0
+Currently Active Slave: eth2
+MII Status: up
+Slave Interface: eth1
+MII Status: up
+Slave Interface: eth2
+MII Status: up
+
+########## [inetRouter] sudo ip link set up eth1; sleep 2; grep -E 'Currently Active Slave|Slave Interface|MII Status' /proc/net/bonding/bond0; ping -c 3 192.168.255.2
+Currently Active Slave: eth2
+MII Status: up
+Slave Interface: eth2
+MII Status: up
+Slave Interface: eth1
+MII Status: up
+PING 192.168.255.2 (192.168.255.2) 56(84) bytes of data.
+64 bytes from 192.168.255.2: icmp_seq=1 ttl=64 time=0.367 ms
+64 bytes from 192.168.255.2: icmp_seq=2 ttl=64 time=0.281 ms
+64 bytes from 192.168.255.2: icmp_seq=3 ttl=64 time=0.452 ms
+
+--- 192.168.255.2 ping statistics ---
+3 packets transmitted, 3 received, 0% packet loss, time 2076ms
+rtt min/avg/max/mdev = 0.281/0.366/0.452/0.073 ms
