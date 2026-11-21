@@ -41,7 +41,7 @@ git config --global credential.helper store
 [ -d .git ] || git init -b main
 git checkout -B main
 git add -A
-git commit -m "VLAN и LACP (bonding): Vagrantfile, Ansible, README" || echo "Нечего коммитить"
+git commit -m "README: исправлена разметка блоков кода" || echo "Нечего коммитить"
 git remote remove origin 2>/dev/null || true
 git remote add origin "https://github.com/$GH_USER/$REPO.git"
 git push -u origin main

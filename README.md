@@ -32,7 +32,7 @@
 
 ## Схема сети
 
-~~text
+~~~text
                  192.168.56.0/24 — host-only сеть управления (Ansible)
 
   +----------------------+     router-net (2 линка)     +--------------------------+
@@ -54,7 +54,7 @@
   | testServer1 eth1.1          | testServer2 vlan2 (enp0s8)   |
   |   10.10.10.1/24             |   10.10.10.1/24              |
   +-----------------------------+------------------------------+
-~~
+~~~
 
 | ВМ | ОС | Управление | Адреса стенда |
 |----|----|------------|---------------|
@@ -68,18 +68,18 @@
 
 ## Запуск
 
-~~bash
+~~~bash
 git clone https://github.com/EvgeniiErmak/otus-vlan-lacp.git
 cd otus-vlan-lacp
 vagrant up
-~~
+~~~
 
 Ansible запускается автоматически после создания последней ВМ (testServer2) сразу на все хосты.
 Повторный прогон — `vagrant provision testServer2` или из корня проекта:
 
-~~bash
+~~~bash
 ANSIBLE_CONFIG=ansible/ansible.cfg ansible-playbook ansible/provision.yml
-~~
+~~~
 
 Протестировано: Ubuntu 26.04 (хост), VirtualBox 7.2.20, Vagrant 2.4.9, ansible-core 2.20.1.
 
@@ -99,7 +99,7 @@ ANSIBLE_CONFIG=ansible/ansible.cfg ansible-playbook ansible/provision.yml
 
 ### VLAN 1: testClient1 <-> testServer1
 
-~~text
+~~~text
 [vagrant@testClient1 ~]$ ip -d link show eth1.1
     link/ether 08:00:27:74:87:82 brd ff:ff:ff:ff:ff:ff
     vlan protocol 802.1Q id 1 <REORDER_HDR>
@@ -111,11 +111,11 @@ ANSIBLE_CONFIG=ansible/ansible.cfg ansible-playbook ansible/provision.yml
 
 [vagrant@testClient1 ~]$ ip neigh show 10.10.10.1
 10.10.10.1 dev eth1.1 lladdr 08:00:27:b6:35:3c REACHABLE     <-- MAC testServer1 (eth1.1)
-~~
+~~~
 
 ### VLAN 2: testClient2 <-> testServer2
 
-~~text
+~~~text
 vagrant@testClient2:~$ ip -d link show vlan2
     link/ether 08:00:27:10:b6:f8 brd ff:ff:ff:ff:ff:ff
     vlan protocol 802.1Q id 2 <REORDER_HDR>
@@ -127,14 +127,14 @@ vagrant@testClient2:~$ ping -c 4 10.10.10.1
 
 vagrant@testClient2:~$ ip neigh show 10.10.10.1
 10.10.10.1 dev vlan2 lladdr 08:00:27:67:96:3f REACHABLE      <-- MAC testServer2 (vlan2)
-~~
+~~~
 
 Оба сервера имеют адрес 10.10.10.1 в одной физической сети testLAN, но каждый клиент получает ответ
 только от «своего» сервера (разные MAC в ARP-таблице) — трафик разведён VLAN'ами.
 
 ### Bond: состояние
 
-~~text
+~~~text
 [vagrant@inetRouter ~]$ cat /proc/net/bonding/bond0
 Bonding Mode: fault-tolerance (active-backup) (fail_over_mac active)
 Currently Active Slave: eth2
@@ -146,13 +146,13 @@ MII Status: up
 
 Slave Interface: eth1
 MII Status: up
-~~
+~~~
 
 ### Bond: отключение интерфейса во время ping
 
 На inetRouter запущен `ping 192.168.255.2`, на centralRouter выполнено `ip link set down eth1`:
 
-~~text
+~~~text
 64 bytes from 192.168.255.2: icmp_seq=6 ttl=64 time=0.326 ms
 64 bytes from 192.168.255.2: icmp_seq=8 ttl=64 time=0.681 ms      <-- переключение на eth2
 ...
@@ -164,7 +164,7 @@ Slave Interface: eth1
 MII Status: down
 Slave Interface: eth2
 MII Status: up
-~~
+~~~
 
 Аналогично при `ip link set down eth1` на inetRouter: `20 packets transmitted, 20 received, 0% packet loss`.
 После `ip link set up eth1` интерфейс возвращается в bond (`MII Status: up`), связь сохраняется.
